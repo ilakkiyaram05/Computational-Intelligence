@@ -1,0 +1,67 @@
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, recall_score, f1_score
+
+def run_exercise():
+    filename = input("Enter the CSV filename : ")
+    try:
+        df = pd.read_csv(filename)
+    except FileNotFoundError:
+        print("File not found! Make sure the CSV is in the same folder.")
+        return
+
+    le = LabelEncoder()
+    for col in df.columns:
+        if df[col].dtype == 'object':
+            df[col] = le.fit_transform(df[col])
+
+    y = df.iloc[:, 0]   # Target (Class)
+    X = df.iloc[:, 1:]  # Features (Alcohol, acid, etc.)
+
+    n_trees = int(input("Enter number of decision trees : "))
+    metric_choice = input("Enter metric (gini or entropy): ").lower()
+
+    split_configs = [0.20, 0.40, 0.25]
+    split_labels = ["80-20", "60-40", "75-25"]
+    final_table_rows = []
+
+    print("\n" + "-"*30)
+    print("DETAILED RESULTS")
+    print("-"*30)
+
+    for i, test_ratio in enumerate(split_configs):
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y, test_size=test_ratio, random_state=42
+        )
+
+        clf = RandomForestClassifier(n_estimators=n_trees, criterion=metric_choice, random_state=42)
+        clf.fit(X_train, y_train)
+        y_pred = clf.predict(X_test)
+
+        cm = confusion_matrix(y_test, y_pred)
+
+        acc = accuracy_score(y_test, y_pred)
+        prec = precision_score(y_test, y_pred, average='macro', zero_division=0)
+        rec = recall_score(y_test, y_pred, average='macro', zero_division=0)
+        f1 = f1_score(y_test, y_pred, average='macro', zero_division=0)
+
+        final_table_rows.append([split_labels[i], f"{acc:.4f}", f"{prec:.4f}", f"{rec:.4f}", f"{f1:.4f}"])
+
+        print(f"\nSplit {split_labels[i]} Metrics:")
+        print(f"Confusion Matrix:\n{cm}")
+        print(f"Actual vs Predicted :")
+        print(f"Actual (first 20):    {list(y_test[ :20])}")
+        print(f"Predicted (first 20): {list(y_pred[ :20])}")
+
+    print("\n" + "="*75)
+    print(f"{'Split Ratio':<15} | {'Accuracy':<10} | {'Precision':<10} | {'Recall':<10} | {'F1 Score':<10}")
+    print("-" * 75)
+    for row in final_table_rows:
+        print(f"{row[0]:<15} | {row[1]:<10} | {row[2]:<10} | {row[3]:<10} | {row[4]:<10}")
+    print("="*75)
+
+if __name__ == "__main__":
+    run_exercise()
