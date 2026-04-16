@@ -1,0 +1,90 @@
+import sys
+
+def run_percept():
+    print("====================================================")
+    print("       NEURAL NETWORK PERCEPTRON TRAINING           ")
+    print("====================================================")
+
+    try:
+        num_features = int(input("Enter the number of input features (n): "))
+        X = []
+        for i in range(num_features):
+            vals = [int(val) for val in input(f"Enter values for X{i+1} (space separated): ").split()]
+            X.append(vals)
+
+        target = [int(i) for i in input("Enter target values (space separated): ").split()]
+        num_samples = len(target)
+
+        for i in range(num_features):
+            if len(X[i]) != num_samples:
+                print(f"Error: X{i+1} length mismatch.")
+                return
+
+        weights = []
+        for i in range(num_features):
+            weights.append(float(input(f"Enter initial weight w{i+1}: ")))
+
+        b = float(input("Enter initial bias b: "))
+        lr = float(input("Enter learning rate: ") or 1.0)
+        threshold = float(input("Enter threshold (theta): ") or 0.0)
+
+    except ValueError:
+        print("Invalid input. Please enter numeric values.")
+        return
+
+    epoch = 0
+    max_epochs = 25
+    converged = False
+
+    while not converged and epoch < max_epochs:
+        epoch += 1
+        all_correct = True
+        print(f"\n--- Epoch {epoch} ---")
+        header = f"{'Sample':<7} | {'yin':<8} | {'Pred':<6} | {'Target':<6} | {'Weights & Bias Update'}"
+        print(header)
+        print("-" * len(header))
+
+        for i in range(num_samples):
+            yin = 0
+            for j in range(num_features):
+                yin += X[j][i] * weights[j]
+            yin += b
+
+            if yin > threshold:
+                y = 1
+            elif yin == threshold:
+                y = 0
+            else:
+                y = -1
+
+            if y != target[i]:
+                all_correct = False
+                error = target[i] - y
+                for j in range(num_features):
+                    weights[j] += lr * error * X[j][i]
+                b += lr * error
+
+                weights_str = ", ".join([f"w{k+1}:{weights[k]:.1f}" for k in range(num_features)])
+                status = f"{weights_str}, b:{b:.1f}"
+            else:
+                status = "(Correct)"
+
+            print(f"{i:<7} | {yin:<8.2f} | {y:<6} | {target[i]:<6} | {status}")
+
+        if all_correct:
+            converged = True
+            print(f"\nCONVERGED successfully in {epoch} epochs!")
+
+    if not converged:
+        print("\nReached maximum epochs without total convergence.")
+
+    print("\n====================================================")
+    print("              FINAL MODEL PARAMETERS                ")
+    print("====================================================")
+    for j in range(num_features):
+        print(f"Final Weight w{j+1}: {weights[j]:.2f}")
+    print(f"Final Bias b     : {b:.2f}")
+    print("====================================================")
+
+if __name__ == "__main__":
+    run_percept()
