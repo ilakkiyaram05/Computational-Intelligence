@@ -1,0 +1,130 @@
+class Node:
+    def __init__(self, state, parent=None):
+        self.state = state
+        self.parent = parent
+
+class Graph:
+    def __init__(self):
+        self.adjacency_list = {}
+
+    def add_node(self, node):
+        if node not in self.adjacency_list:
+            self.adjacency_list[node] = []
+        else:
+            print("Node already exists")
+
+    def del_node(self, node):
+        if node in self.adjacency_list:
+            self.adjacency_list.pop(node)
+            for n in self.adjacency_list:
+                self.adjacency_list[n] = [neighbor for neighbor in self.adjacency_list[n] if neighbor[0] != node]
+        else:
+            print("Node doesn't exist")
+
+    def add_edge(self, u, v, cost):
+        if u in self.adjacency_list and v in self.adjacency_list:
+            # Storing as (node, cost) for A* compatibility
+            self.adjacency_list[u].append((v, cost))
+            self.adjacency_list[v].append((u, cost))
+        else:
+            print("One or both nodes don't exist")
+
+    def del_edge(self, u, v):
+        if u in self.adjacency_list and v in self.adjacency_list:
+            self.adjacency_list[u] = [n for n in self.adjacency_list[u] if n[0] != v]
+            self.adjacency_list[v] = [n for n in self.adjacency_list[v] if n[0] != u]
+        else:
+            print("One or both nodes don't exist")
+
+    def display(self):
+        print("\nAdjacency List:")
+        for node in self.adjacency_list:
+            print(f"{node} -> {self.adjacency_list[node]}")
+
+def astar(graph, start, goal, heu):
+    fringe = list([start])
+    cost = {start: 0}
+    parent = {start: None}
+    visited = list()
+    while fringe:
+        curr = None
+        best = float('inf')
+        for node in fringe:
+            f = cost[node] + heu[node]
+            if f < best:
+                best = f
+                curr = node
+
+        fringe.remove(curr)
+        visited.append(curr)
+
+        print("Expanding :", curr, "cost so far:", cost[curr])
+        print("fringe:", fringe)
+        print("visited:", visited)
+
+        if curr == goal:
+            return parent, cost[goal]
+
+        for neigh, s_cost in graph.adjacency_list.get(curr, []):
+            if neigh in visited: continue
+            new_cost = cost[curr] + s_cost
+            if neigh not in cost or new_cost < cost[neigh]:
+                cost[neigh] = new_cost
+                parent[neigh] = curr
+                fringe.append(neigh)
+    return None, None
+
+def path_trace(goal, parent, t_cost):
+    if not parent:
+        print("No path found")
+        return
+    path = []
+    while goal is not None:
+        path.append(goal)
+        goal = parent[goal]
+    path.reverse()
+    print("Path:", " -> ".join(path))
+    print("Total cost:", t_cost)
+
+g = Graph()
+print("\n1. Add Node\n2. Delete Node\n3. Add Edge\n4. Delete Edge\n5. Display Graph\n6. Run A*\n7. Exit")
+
+while True:
+    ch_input = input("\nEnter your choice: ")
+    if not ch_input.strip(): continue
+    try:
+        ch = int(ch_input)
+    except ValueError: continue
+
+    if ch == 1:
+        num = int(input("Enter no.of nodes: "))
+        for i in range(num):
+            node = input(f"Enter node {i}: ")
+            g.add_node(node)
+    elif ch == 2:
+        node = input("Enter node to delete: ")
+        g.del_node(node)
+    elif ch == 3:
+        no = int(input("Enter no.of edges: "))
+        for i in range(no):
+            u = input("Source node: ")
+            v = input("Destination node: ")
+            c = int(input("Edge cost: "))
+            g.add_edge(u, v, c)
+    elif ch == 4:
+        u = input("Source node: ")
+        v = input("Destination node: ")
+        g.del_edge(u, v)
+    elif ch == 5:
+        g.display()
+    elif ch == 6:
+        # Collect Heuristics
+        h = {}
+        for node in g.adjacency_list:
+            h[node] = int(input(f"Enter heuristic for {node}: "))
+        start = input("Start node: ")
+        goal = input("Goal node: ")
+        res_parent, res_cost = astar(g, start, goal, h)
+        path_trace(goal, res_parent, res_cost)
+    elif ch == 7:
+        break
