@@ -1,0 +1,14 @@
+<--- Math Logic --->
+add(X, Y, R) :- R is X + Y.
+sub(X, Y, R) :- R is X - Y.
+mul(X, Y, R) :- R is X * Y.
+div(X, Y, R) :- Y =\= 0, R is X / Y.
+
+<--- Set Logic --->
+union([], L, L).
+union([H|T], L, R) :- member(H, L), !, union(T, L, R).
+union([H|T], L, [H|R]) :- union(T, L, R).
+
+intersect([], _, []).
+intersect([H|T], L, [H|R]) :- member(H, L), !, intersect(T, L, R).
+intersect([_|T], L, R) :- intersect(T, L, R).
