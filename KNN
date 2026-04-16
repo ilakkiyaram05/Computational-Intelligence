@@ -1,0 +1,125 @@
+import csv
+
+def calculate_distance(p1, p2, r):
+    total = sum(abs(a - b) ** r for a, b in zip(p1, p2))
+    return total ** (1 / r)
+
+def get_min_max(dataset):
+    cols = len(dataset[0])
+    mins = [min(row[i] for row in dataset) for i in range(cols)]
+    maxs = [max(row[i] for row in dataset) for i in range(cols)]
+    return mins, maxs
+
+def normalize(point, mins, maxs):
+    norm_p = []
+    for i in range(len(point)):
+        div = maxs[i] - mins[i]
+        val = (point[i] - mins[i]) / div if div != 0 else 0
+        norm_p.append(val)
+    return norm_p
+
+def unweighted_voting(neighbors):
+    counts = {}
+    for item in neighbors:
+        label = item['label']
+        counts[label] = counts.get(label, 0) + 1
+    print("\n--- Label Voting Counts ---")
+    for lbl, c in counts.items():
+        print(f"Label {lbl}: {c} votes")
+    return max(counts, key=counts.get)
+
+def weighted_voting(neighbors):
+    weights = {}
+    for item in neighbors:
+        dist = item['distance']
+        label = item['label']
+        w = 1 / dist if dist != 0 else 1000000
+        weights[label] = weights.get(label, 0) + w
+    print("\n--- Label Weights ---")
+    for lbl, w in weights.items():
+        print(f"Label {lbl}: Total Weight = {w:.4f}")
+    return max(weights, key=weights.get)
+
+def main():
+    file_name = input("Enter the dataset filename: ")
+    features = []
+    labels = []
+    try:
+        with open(file_name, 'r') as file:
+            for row in file:
+                row = row.strip()
+                if not row: continue
+                parts = row.split(',') if ',' in row else row.split()
+                features.append([float(x) for x in parts[:-1]])
+                labels.append(parts[-1].strip())
+        num_feats = len(features[0])
+        print(f"\nDataset with {len(features)} rows and {num_feats} features is loaded...")
+    except FileNotFoundError:
+        print("File not found!")
+        return
+
+    test_str = input(f"\nEnter {num_feats} unknown features in csv format: ")
+    test_point = [float(x.strip()) for x in test_str.split(",")]
+    if len(test_point) != num_feats:
+        print(f"Error: Mismatch in feature count!")
+        return
+
+    r_val = float(input("Enter r value: "))
+    mins, maxs = get_min_max(features)
+    norm_features = [normalize(f, mins, maxs) for f in features]
+    norm_test_point = normalize(test_point, mins, maxs)
+    master_list = []
+    for i in range(len(features)):
+        d = calculate_distance(norm_features[i], norm_test_point, r_val)
+        master_list.append({
+            'original_feat': features[i],
+            'label': labels[i],
+            'distance': d
+        })
+
+    ranked_list = sorted(master_list, key=lambda x: x['distance'])
+    for rank, item in enumerate(ranked_list, 1):
+        item['rank'] = rank
+
+    n = int(input("\nNo.of records to be displayed from full dataset: "))
+
+    print("\nFeature Descriptions: [mean corpuscular volume, alkaline phosphotase, alanine aminotransferase, aspartate aminotransferase, gamma-glutamyl transpeptidase,drinks]")
+    print("\n" + "-" * 95)
+    print(f"{'Features':<55} | {'Label':<8} | {'Distance':<10} | {'Rank'}")
+    print("-" * 95)
+    for item in master_list[:n]:
+        feat_str = ", ".join([f"{x:.2f}" for x in item['original_feat']])
+        print(f"{feat_str:<55} | {item['label']:<8} | {item['distance']:<10.4f} | {item['rank']}")
+    print("-" * 95)
+
+    while True:
+        print("\nMENU")
+        print("1. Unweighted Voting")
+        print("2. Weighted Voting")
+        print("3. Exit")
+        choice = input("Choice: ")
+
+        if choice == '3':
+            print("Exiting...")
+            break
+
+        if choice in ['1', '2']:
+            k_val = int(input(f"Enter K value: "))
+            neighbors = ranked_list[:k_val]
+
+            print(f"\n--- Top {k_val} Neighbors ---")
+            print(f"{'Rank':<5} | {'Distance':<12} | {'Label'}")
+            for item in neighbors:
+                print(f"{item['rank']:<5} | {item['distance']:<12.4f} | {item['label']}")
+
+            if choice == '1':
+                prediction = unweighted_voting(neighbors)
+            else:
+                prediction = weighted_voting(neighbors)
+
+            print(f"\nPredicted Label is: {prediction}")
+        else:
+            print("Invalid choice..!")
+
+if __name__ == "__main__":
+    main()
