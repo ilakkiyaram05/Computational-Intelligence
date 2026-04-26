@@ -1,0 +1,40 @@
+from fractions import Fraction
+def solve():
+    print("--- Individual Urn Probabilities ---")
+    p_rx = Fraction(4, 7)
+    p_bx = Fraction(3, 7)
+    print(f"Urn X: Red = {p_rx}, Black = {p_bx}")
+    p_ry = Fraction(5, 9)
+    p_by = Fraction(4, 9)
+    print(f"Urn Y: Red = {p_ry}, Black = {p_by}")
+    p_rz = Fraction(4, 8)
+    p_bz = Fraction(4, 8)
+    print(f"Urn Z: Red = {p_rz}, Black = {p_bz}")
+    print("\n--- Calculating Scenarios (Exactly 2 Red) ---")
+    prob_scenario1 = p_rx * p_ry * p_bz
+    print(f"Scenario 1 (Red, Red, Black): {p_rx} * {p_ry} * {p_bz} = {prob_scenario1}")
+    prob_scenario2 = p_rx * p_by * p_rz
+    print(f"Scenario 2 (Red, Black, Red): {p_rx} * {p_by} * {p_rz} = {prob_scenario2}")
+    prob_scenario3 = p_bx * p_ry * p_rz
+    print(f"Scenario 3 (Black, Red, Red): {p_bx} * {p_ry} * {p_rz} = {prob_scenario3}")
+    total_probability = prob_scenario1 + prob_scenario2 + prob_scenario3
+
+    print("\n--- Final Result ---")
+    print(f"Total Probability: {prob_scenario1} + {prob_scenario2} + {prob_scenario3} = {total_probability}")
+
+if __name__ == '__main__':
+    solve()
+[23bcs071@mepcolinux ex9]$cat hr
+[23bcs071@mepcolinux ex9]$python3 hr.py
+--- Individual Urn Probabilities ---
+Urn X: Red = 4/7, Black = 3/7
+Urn Y: Red = 5/9, Black = 4/9
+Urn Z: Red = 1/2, Black = 1/2
+
+--- Calculating Scenarios (Exactly 2 Red) ---
+Scenario 1 (Red, Red, Black): 4/7 * 5/9 * 1/2 = 10/63
+Scenario 2 (Red, Black, Red): 4/7 * 4/9 * 1/2 = 8/63
+Scenario 3 (Black, Red, Red): 3/7 * 5/9 * 1/2 = 5/42
+
+--- Final Result ---
+Total Probability: 10/63 + 8/63 + 5/42 = 17/42

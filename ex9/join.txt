@@ -1,0 +1,156 @@
+def probability_system():
+    var_names_input = input("Enter variable names (comma-separated): ")
+    var_names = [v.strip() for v in var_names_input.split(',')]
+    var_name_to_index = {name: i for i, name in enumerate(var_names)}
+
+    # --- STEP 2: Get Labels for each Variable ---
+    all_var_labels = []
+    for name in var_names:
+        labels_input = input(f"Enter labels for {name} (comma-separated): ")
+        labels = [l.strip() for l in labels_input.split(',')]
+        all_var_labels.append(labels)
+
+    # --- STEP 3: Generate All Combinations (Cartesian Product) ---
+    combinations = [[]]
+    for labels_for_var in all_var_labels:
+        # Create a new list to hold the next set of combinations
+        temp_list = []
+        for combo in combinations:
+            for label in labels_for_var:
+                temp_list.append(combo + [label])
+        combinations = temp_list
+
+    # --- STEP 4: Fill the Probabilities (Knowledge Base - KB) ---
+    kb = []
+    print("\n--- Enter Joint Probabilities ---")
+    total_prob = 0
+    for combo in combinations:
+        # Create a descriptive string for the prompt, e.g., "Cavity=True, Toothache=True"
+        scenario_desc = ", ".join(f"{var_names[i]}={label}" for i, label in enumerate(combo))
+        while True:
+            try:
+                prob_input = input(f"P({scenario_desc}): ")
+                prob = float(prob_input)
+                if not (0 <= prob <= 1):
+                    # Raise an error if probability is not in the valid range
+                    raise ValueError("Probability must be between 0 and 1.")
+                break  # Exit the loop if input is valid
+            except ValueError as e:
+                print(f"Invalid input. {e}. Please try again.")
+
+        kb.append({'labels': combo, 'prob': prob})
+        total_prob += prob
+
+    # Optional: Check if the probabilities sum to 1
+    if not (0.999 < total_prob < 1.001):
+        print(f"\nWarning: Probabilities sum to {total_prob:.4f}, not 1.0. Results may be incorrect.")
+
+    # --- STEP 5: QUERY ENGINE ---
+    print("\n--- Knowledge Base Ready. Enter Queries ---")
+
+    def parse_query_part(part_str):
+        """Converts a query string like 'Var1=Label1, Var2=Label2' into a dictionary."""
+        parsed_dict = {}
+        for item in part_str.split(','):
+            if '=' not in item:
+                raise ValueError(f"Invalid event format: '{item}'. Must be 'Variable=Label'.")
+            var, label = item.split('=', 1)
+            var = var.strip()
+            label = label.strip()
+            if var not in var_name_to_index:
+                raise ValueError(f"Variable '{var}' not found in the knowledge base.")
+            parsed_dict[var] = label
+        return parsed_dict
+
+    def matches_criteria(row_labels, criteria_dict):
+        """Checks if a row from the KB matches a set of criteria."""
+        for var_name, required_label in criteria_dict.items():
+            var_idx = var_name_to_index[var_name]
+            if row_labels[var_idx] != required_label:
+                return False
+        return True
+
+    while True:
+        query = input("Enter query (e.g., Var=Label | Var2=Label2, or 'exit'): ").strip()
+        if query.lower() == 'exit':
+            print("Exiting.")
+            break
+
+        try:
+            # Initialize dictionaries for the query parts
+            targets_dict = {}
+            conditions_dict = {}
+
+            # Check for a conditional query
+            if '|' in query:
+                target_str, cond_str = query.split('|', 1)
+                targets_dict = parse_query_part(target_str)
+                conditions_dict = parse_query_part(cond_str)
+            else: # Otherwise, it's a joint probability query
+                targets_dict = parse_query_part(query)
+
+            # Initialize probabilities for the numerator and denominator
+            prob_numerator = 0.0   # P(targets AND conditions)
+            prob_denominator = 0.0 # P(conditions)
+
+            # Combine all criteria to find the numerator
+            combined_criteria = {**targets_dict, **conditions_dict}
+
+            for entry in kb:
+                row_labels = entry['labels']
+                current_prob = entry['prob']
+
+                # If there are conditions, check if the row matches them to calculate the denominator
+                if conditions_dict:
+                    if matches_criteria(row_labels, conditions_dict):
+                        prob_denominator += current_prob
+
+                # Check if the row matches the combined criteria for the numerator
+                if matches_criteria(row_labels, combined_criteria):
+                    prob_numerator += current_prob
+
+            # Calculate and print the final result
+            if not conditions_dict:
+                # This is a joint probability query: P(A, B)
+                print(f"P({query}) = {prob_numerator:.4f}")
+            elif prob_denominator == 0:
+                # Avoid division by zero
+                print(f"P({query}) = 0.0000 (The condition is impossible)")
+            else:
+                # This is a conditional probability query: P(A | B) = P(A, B) / P(B)
+                final_prob = prob_numerator / prob_denominator
+                print(f"P({query}) = {final_prob:.4f}")
+
+        except ValueError as e:
+            print(f"Query Error: {e}. Please use the format 'Var=Label'.")
+        except Exception:
+            print("An unexpected error occurred.")
+
+if __name__ == "__main__":
+    probability_system()
+[23bcs071@mepcolinux ex9]$cat jp
+[23bcs071@mepcolinux ex9]$python3 join.py
+Enter variable names (comma-separated): cavity, toothache, catch
+Enter labels for cavity (comma-separated): True, False
+Enter labels for toothache (comma-separated): True, False
+Enter labels for catch (comma-separated): True, False
+
+--- Enter Joint Probabilities ---
+P(cavity=True, toothache=True, catch=True): 0.108
+P(cavity=True, toothache=True, catch=False): 0.012
+P(cavity=True, toothache=False, catch=True): 0.072
+P(cavity=True, toothache=False, catch=False): 0.008
+P(cavity=False, toothache=True, catch=True): 0.016
+P(cavity=False, toothache=True, catch=False): 0.064
+P(cavity=False, toothache=False, catch=True): 0.144
+P(cavity=False, toothache=False, catch=False): 0.576
+
+--- Knowledge Base Ready. Enter Queries ---
+Enter query (e.g., Var=Label | Var2=Label2, or 'exit'): cavity=True | toothache=True, catch=True
+P(cavity=True | toothache=True, catch=True) = 0.8710
+Enter query (e.g., Var=Label | Var2=Label2, or 'exit'): toothache=True
+P(toothache=True) = 0.2000
+Enter query (e.g., Var=Label | Var2=Label2, or 'exit'): cavity=False | catch=True
+P(cavity=False | catch=True) = 0.4706
+Enter query (e.g., Var=Label | Var2=Label2, or 'exit'): exit
+Exiting.

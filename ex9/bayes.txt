@@ -1,0 +1,15 @@
+P_A = float(input("Enter P(A): "))
+P_B = float(input("Enter P(B): "))
+P_B_given_A = float(input("Enter P(B|A): "))
+if P_B == 0:
+    print("P(B) cannot be zero!")
+else:
+    P_A_given_B = (P_B_given_A * P_A) / P_B
+    print(f"\nP(A|B) = {P_A_given_B:.4f}")
+[23bcs071@mepcolinux ex9]$cat bp
+[23bcs071@mepcolinux ex9]$python3 bayes.py
+Enter P(A): 0.01
+Enter P(B): 0.0590
+Enter P(B|A): 0.95
+
+P(A|B) = 0.1610
