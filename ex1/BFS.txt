@@ -1,0 +1,135 @@
+from collections import deque
+
+class Graph:
+    def __init__(self):
+        self.graph = {}
+
+    def add_node(self, node):
+        if node not in self.graph:
+            self.graph[node] = []
+        else:
+            print("Node already exists")
+
+    def delete_node(self, node):
+        if node in self.graph:
+            self.graph.pop(node)
+            for n in self.graph:
+                if node in self.graph[n]:
+                    self.graph[n].remove(node)
+        else:
+            print("Node doesn't exist")
+
+    def add_edge(self, u, v):
+        if u in self.graph and v in self.graph:
+            if v not in self.graph[u]:
+                self.graph[u].append(v)
+            if u not in self.graph[v]:
+                self.graph[v].append(u)
+            print(u, "->", self.graph[u])
+
+    def delete_edge(self, u, v):
+        if u in self.graph and v in self.graph:
+            if v in self.graph[u]:
+                self.graph[u].remove(v)
+            if u in self.graph[v]:
+                self.graph[v].remove(u)
+            print(u, "->", self.graph[u])
+
+    def display(self):
+        print("\nAdjacency List:")
+        for node in self.graph:
+            print(node, "->", self.graph[node])
+
+    def bfs(self, start, goal):
+        fringe = list(self.graph.keys())
+        visited = []
+        parent = {start: None}
+        queue = deque()
+
+        queue.append(start)
+        if start in fringe:
+            fringe.remove(start)
+
+        print("\n--- BFS Intermediate Steps ---")
+        found = False
+        while queue:
+            current = queue.popleft()
+            visited.append(current)
+
+            print(f"Current Node: {current}")
+            print(f"Visited: {visited}")
+            print(f"Unvisited (Fringe): {fringe}")
+            print("-" * 20)
+
+            if current == goal:
+                found = True
+                break
+
+            for neighbor in self.graph[current]:
+                if neighbor in fringe:
+                    parent[neighbor] = current
+                    queue.append(neighbor)
+                    fringe.remove(neighbor)
+
+        if found:
+            path = []
+            temp = goal
+            while temp is not None:
+                path.append(temp)
+                temp = parent[temp]
+            path.reverse()
+            print("\nBFS Path to Goal:", " -> ".join(map(str, path)))
+        else:
+            print(f"\nGoal node {goal} was NOT found. No path exists.")
+
+        print("\nUnvisited Nodes:", fringe)
+        print("\nVisited Nodes:", visited)
+        print("\nBFS Traversal Order:")
+        for node in visited:
+            print(node, "->", self.graph[node])
+
+g = Graph()
+print("\n1. Add Node\n2. Delete Node\n3. Add Edge\n4. Delete Edge\n5. Display Graph\n6. BFS Traversal\n7. Exit")
+while True:
+    ch_input = input("Enter your choice: ")
+    if not ch_input.strip():
+        continue
+    ch = int(ch_input)
+
+    if ch == 1:
+        num = int(input("Enter no.of nodes: "))
+        for i in range(num):
+            node = (input(f"Enter node {i}: "))
+            g.add_node(node)
+
+    elif ch == 2:
+        node = (input("Enter node to delete: "))
+        g.delete_node(node)
+
+    elif ch == 3:
+        no = int(input("Enter no.of edges: "))
+        for i in range(no):
+            print(f"Edge {i}:")
+            u = (input("source node: "))
+            v = (input("destination node: "))
+            g.add_edge(u, v)
+
+    elif ch == 4:
+        u = (input("source node: "))
+        v = (input("destination node: "))
+        g.delete_edge(u, v)
+
+    elif ch == 5:
+        g.display()
+
+    elif ch == 6:
+        start = (input("start node: "))
+        goal = (input("goal node: "))
+        g.bfs(start, goal)
+
+    elif ch == 7:
+        print("End of code")
+        break
+
+    else:
+        print("Invalid choice")

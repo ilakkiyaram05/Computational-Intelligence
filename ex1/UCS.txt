@@ -1,0 +1,132 @@
+from collections import deque
+class Graph:
+    def __init__(self):
+        self.wgraph = {}
+    def add_node(self, node):
+        if node not in self.wgraph:
+            self.wgraph[node] = []
+        else:
+            print("Node already exists")
+    def del_node(self, node):
+        if node in self.wgraph:
+            self.wgraph.pop(node)
+            for n in self.wgraph:
+                self.wgraph[n] = [(neigh, cost) for neigh, cost in self.wgraph[n] if neigh != node]
+        else:
+            print("Node doesn't exist")
+    def add_edge(self, u, v, w=1):
+        if u in self.wgraph and v in self.wgraph:
+            if not any(neigh == v for neigh, _ in self.wgraph[u]):
+                self.wgraph[u].append((v, w))
+            if not any(neigh == u for neigh, _ in self.wgraph[v]):
+                self.wgraph[v].append((u, w))
+    def del_edge(self, u, v):
+        if u in self.wgraph and v in self.wgraph:
+            self.wgraph[u] = [(neigh, cost) for neigh, cost in self.wgraph[u] if neigh != v]
+            self.wgraph[v] = [(neigh, cost) for neigh, cost in self.wgraph[v] if neigh != u]
+    def display(self):
+        print("\nWeighted Adjacency List:")
+        for node in self.wgraph:
+            print(node, "->", self.wgraph[node])
+    def ucs(self, start, goal):
+        front = [(0, start, [start])]
+        explore = set()
+
+        print("\n    UCS Traversal Started    ")
+        print(f"Start Node: {start}")
+        print(f"Goal Node: {goal}\n")
+
+        step = 0
+        while front:
+            front.sort(key=lambda x: x[0])
+
+            step += 1
+           # print(f"    Step {step}    ")
+            print(f"Frontier: {[(cost, node) for cost, node, _ in front]}")
+            print(f"Explored: {explore}")
+
+            curr_cost, curr_node, path = front.pop(0)
+
+            print(f"Expanding:['{curr_node}',{curr_cost}]")
+            print(f"Current Path: {' -> '.join(map(str, path))}")
+
+            if curr_node == goal:
+                print("\n")
+                print("Goal Reached..")
+                print(f"Optimal Path: {' -> '.join(map(str, path))}")
+                print(f"Total Cost: {curr_cost}")
+                print("\n")
+                return
+
+            explore.add(curr_node)
+
+            neighbors_info = []
+            for neigh, step_cost in self.wgraph.get(curr_node, []):
+                if neigh not in explore:
+                    new_cost = curr_cost + step_cost
+                    new_path = path + [neigh]
+                    in_front = False
+                    for i, (cost, node, old_path) in enumerate(front):
+                        if node == neigh:
+                            in_front = True
+                            if new_cost < cost:
+                                neighbors_info.append(f"{neigh} (cost: {new_cost}, updated from {cost})")
+                                front[i] = (new_cost, neigh, new_path)
+                            else:
+                                neighbors_info.append(f"{neigh} (cost: {new_cost}, not updated)")
+                            break
+                    if not in_front:
+                        neighbors_info.append(f"{neigh} (cost: {new_cost}, added)")
+                        front.append((new_cost, neigh, new_path))
+
+            if neighbors_info:
+                print("Neighbors processed")
+#                print(f"Neighbors processed: {', '.join(neighbors_info)}")
+            else:
+                print("No unvisited neighbors")
+            print()
+
+        print(f"\nGoal node {goal} not found. No path exists.")
+
+g = Graph()
+print("\n1. Add Node\n2. Delete Node\n3. Add Edge\n4. Delete Edge\n5. Display Graph\n6. UCS Traversal\n7. Exit")
+while True:
+    ch_input = input("\nEnter your choice: ")
+    if not ch_input.strip():
+        continue
+    try:
+        ch = int(ch_input)
+    except ValueError:
+        print("Invalid input. Please enter a number.")
+        continue
+    if ch == 1:
+        num = int(input("Enter no.of nodes: "))
+        for i in range(num):
+            node = input(f"Enter node {i}: ")
+            g.add_node(node)
+    elif ch == 2:
+        node = input("Enter node to delete: ")
+        g.del_node(node)
+    elif ch == 3:
+        no = int(input("Enter no.of edges: "))
+        for i in range(no):
+            print(f"Edge {i}:")
+            u = input("source node: ")
+            v = input("destination node: ")
+            weight = int(input("weight :"))
+            g.add_edge(u, v, weight)
+    elif ch == 4:
+        u = input("source node: ")
+        v = input("destination node: ")
+        g.del_edge(u, v)
+    elif ch == 5:
+        g.display()
+    elif ch == 6:
+        start = input("start node: ")
+        goal = input("goal node: ")
+        g.ucs(start, goal)
+    elif ch == 7:
+        print("End of code")
+        break
+    else:
+        print("Invalid choice")

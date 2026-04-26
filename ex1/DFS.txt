@@ -1,0 +1,143 @@
+class Node:
+    def __init__(self, state, parent=None):
+        self.state = state
+        self.parent = parent
+
+class Graph:
+    def __init__(self):
+        self.adjacency_list = {}
+
+    def add_node(self, node):
+        if node not in self.adjacency_list:
+            self.adjacency_list[node] = []
+        else:
+            print("Node already exists")
+
+    def del_node(self, node):
+        if node in self.adjacency_list:
+            self.adjacency_list.pop(node)
+            for n in self.adjacency_list:
+                self.adjacency_list[n] = [neighbor for neighbor in self.adjacency_list[n] if neighbor != node]
+        else:
+            print("Node doesn't exist")
+
+    def add_edge(self, u, v):
+        if u in self.adjacency_list and v in self.adjacency_list:
+            if v not in self.adjacency_list[u]:
+                self.adjacency_list[u].append(v)
+            if u not in self.adjacency_list[v]:
+                self.adjacency_list[v].append(u)
+        else:
+            print("One or both nodes don't exist")
+
+    def del_edge(self, u, v):
+        if u in self.adjacency_list and v in self.adjacency_list:
+            self.adjacency_list[u] = [neighbor for neighbor in self.adjacency_list[u] if neighbor != v]
+            self.adjacency_list[v] = [neighbor for neighbor in self.adjacency_list[v] if neighbor != u]
+        else:
+            print("One or both nodes don't exist")
+
+    def display(self):
+        print("\nAdjacency List:")
+        for node in self.adjacency_list:
+            print(f"{node} -> {self.adjacency_list[node]}")
+
+    def dfs(self, start, goal):
+        fringe = []
+        visited = []
+
+        print("\n=== DFS Traversal Started ===")
+        print(f"Start Node: {start}")
+        print(f"Goal Node: {goal}\n")
+
+        start_node = Node(start)
+        fringe.append(start_node)
+
+        print("--- Initial State ---")
+        print("Fringe:", [n.state for n in fringe])
+        print("Visited:", visited)
+        print()
+
+        step = 0
+        while fringe:
+            step += 1
+        #    print(f"   Step {step}   ")
+
+            current = fringe.pop()
+            print(f"Popped from fringe: {current.state}")
+
+            visited.append(current.state)
+            print(f"Added to visited: {current.state}")
+
+            if current.state == goal:
+                print("\n")
+                print("Goal Reached!")
+                print(f"Path Travelled: {' -> '.join(visited)}")
+                print("\n")
+
+                print("\nFringe:", [n.state for n in fringe])
+                print("Visited:", visited)
+                return current
+
+            neighbors = self.adjacency_list.get(current.state, [])
+           # print(f"Neighbors of {current.state}: {neighbors}")
+
+            added_neighbors = []
+            for neighbor in reversed(neighbors):
+                if neighbor not in visited and neighbor not in [n.state for n in fringe]:
+                    child = Node(neighbor, current)
+                    fringe.append(child)
+                    added_neighbors.append(neighbor)
+
+            if added_neighbors:
+                print(f"Added to fringe: {added_neighbors[::-1]}")
+            else:
+                print("No new neighbors added to fringe")
+
+            print(f"Fringe: {[n.state for n in fringe]}")
+            print(f"Visited: {visited}")
+            print()
+
+        print("\n")
+        print(f"Goal node {goal} was NOT found.")
+        print("\n")
+        return None
+
+g = Graph()
+print("\n1. Add Node\n2. Delete Node\n3. Add Edge\n4. Delete Edge\n5. Display Graph\n6. DFS Traversal\n7. Exit")
+
+while True:
+    ch_input = input("\nEnter your choice: ")
+    if not ch_input.strip(): continue
+    try:
+        ch = int(ch_input)
+    except ValueError:
+        continue
+
+    if ch == 1:
+        num = int(input("Enter no.of nodes: "))
+        for i in range(num):
+            node = input(f"Enter node {i}: ")
+            g.add_node(node)
+    elif ch == 2:
+        node = input("Enter node to delete: ")
+        g.del_node(node)
+    elif ch == 3:
+        no = int(input("Enter no.of edges: "))
+        for i in range(no):
+            print(f"Edge {i}:")
+            u = input("Source node: ")
+            v = input("Destination node: ")
+            g.add_edge(u, v)
+    elif ch == 4:
+        u = input("Source node: ")
+        v = input("Destination node: ")
+        g.del_edge(u, v)
+    elif ch == 5:
+        g.display()
+    elif ch == 6:
+        start = input("Start node: ")
+        goal = input("Goal node: ")
+        g.dfs(start, goal)
+    elif ch == 7:
+        break
