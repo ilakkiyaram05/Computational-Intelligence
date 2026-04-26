@@ -1,0 +1,55 @@
+male(karamchand).
+male(mahatma).
+male(harilal).
+male(ramdas).
+male(devdas).
+male(manilal).
+
+female(putlibai).
+female(kasturba).
+female(ramabai).
+female(gulab).
+
+parent(karamchand,mahatma).
+parent(putlibai,mahatma).
+
+parent(mahatma,harilal).
+parent(mahatma,manilal).
+parent(mahatma,ramdas).
+parent(mahatma,devdas).
+parent(kasturba,harilal).
+parent(kasturba,manilal).
+parent(kasturba,ramdas).
+parent(kasturba,devdas).
+
+parent(harilal,ramabai).
+parent(gulab,ramabai).
+
+father(X,Y):-
+    parent(X,Y),
+    male(X).
+mother(X,Y):-
+    parent(X,Y),
+    female(X).
+grandparent(X,Y):-
+    parent(X,Z),
+    parent(Z,Y).
+grandfather(X,Y):-
+    grandparent(X,Y),
+    male(X).
+grandmother(X,Y):-
+    grandparent(X,Y),
+    female(X).
+sibling(X,Y):-
+    parent(Z,X),
+    parent(Z,Y),
+    X\=Y.
+greatgrandparent(X,Y):-
+    grandparent(Z,Y),
+    parent(X,Z).
+greatgrandfather(X,Y):-
+    greatgrandparent(X,Y),
+    male(X).
+greatgrandmother(X,Y):-
+    greatgrandparent(X,Y),
+    female(X).
